@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Bid Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/webfont/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --surface-2: #f8f9fa;
+      --border: rgba(0,0,0,0.1);
+      --border-md: rgba(0,0,0,0.18);
+      --text-primary: #1a1a2e;
+      --text-secondary: #5a6072;
+      --text-muted: #9199aa;
+      --blue: #185FA5;
+      --blue-dark: #0C447C;
+      --blue-light: #E6F1FB;
+      --blue-text: #185FA5;
+      --green-bg: #EAF3DE;
+      --green-text: #3B6D11;
+      --green-border: #97C459;
+      --red-bg: #FCEBEB;
+      --red-text: #A32D2D;
+      --red-border: #F09595;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container { width: 100%; max-width: 560px; }
+    .panel-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+    .panel-header-icon {
+      width: 44px; height: 44px;
+      background: var(--blue-light);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .panel-header-icon i { font-size: 22px; color: var(--blue-text); }
+    .panel-header h1 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    .panel-header p { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .section-label {
+      font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em;
+      color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.85rem;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+    .form-label .req { color: #E24B4A; margin-left: 2px; }
+    input[type="text"], input[type="number"] {
+      width: 100%; height: 38px; padding: 0 12px;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius-md);
+      font-size: 14px; color: var(--text-primary);
+      background: var(--surface); font-family: var(--font);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+    input::placeholder { color: var(--text-muted); }
+    .amount-wrap { position: relative; }
+    .amount-prefix {
+      position: absolute; left: 11px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; color: var(--text-secondary); pointer-events: none;
+    }
+    .amount-wrap input { padding-left: 28px; }
+    .driver-info-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: none; align-items: center; gap: 12px; margin-top: 10px;
+    }
+    .driver-info-card.show { display: flex; }
+    .driver-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--blue-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: var(--blue-text); flex-shrink: 0;
+    }
+    .driver-details p { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .submit-btn {
+      width: 100%; height: 42px;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.15s, transform 0.1s; font-family: var(--font);
+    }
+    .submit-btn:hover:not(:disabled) { background: var(--blue-dark); }
+    .submit-btn:active:not(:disabled) { transform: scale(0.99); }
+    .submit-btn:disabled { background: #dde1e7; color: var(--text-muted); cursor: not-allowed; }
+
+    /* Response */
+    .response-area { margin-top: 1rem; display: none; }
+    .response-area.show { display: block; }
+
+    .response-message {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .response-message i { font-size: 20px; flex-shrink: 0; }
+    .response-message.success { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+    .response-message.error   { background: var(--red-bg);   color: var(--red-text);   border: 0.5px solid var(--red-border); }
+
+    .response-toggle {
+      background: none; border: none; cursor: pointer;
+      font-size: 12px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 4px;
+      padding: 0 2px 8px; font-family: var(--font);
+    }
+    .response-toggle:hover { color: var(--text-secondary); }
+    .response-toggle i { font-size: 14px; transition: transform 0.2s; }
+    .response-toggle.open i { transform: rotate(180deg); }
+
+    .response-raw { display: none; }
+    .response-raw.show { display: block; }
+    .response-body {
+      background: #1e1e2e;
+      border-radius: var(--radius-md);
+      padding: 14px 16px; overflow-x: auto;
+    }
+    .response-body pre {
+      font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65;
+      color: #cdd6f4; white-space: pre-wrap; word-break: break-all; margin: 0;
+    }
+    .response-meta { font-size: 11px; color: #6c7086; margin-top: 10px; display: flex; gap: 14px; }
+
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Select2 */
+    .select2-container--default .select2-selection--single { height: 38px !important; border: 1px solid var(--border-md) !important; border-radius: var(--radius-md) !important; background: var(--surface) !important; display: flex; align-items: center; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 38px !important; color: var(--text-primary) !important; font-size: 14px !important; padding-left: 12px !important; }
+    .select2-container--default .select2-selection--single .select2-selection__placeholder { color: var(--text-muted) !important; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 38px !important; }
+    .select2-container--default.select2-container--focus .select2-selection--single { border-color: var(--blue) !important; box-shadow: 0 0 0 3px rgba(24,95,165,0.12) !important; }
+    .select2-dropdown { border: 1px solid var(--border-md) !important; border-radius: var(--radius-md) !important; overflow: hidden; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: var(--blue-light) !important; color: var(--blue-text) !important; }
+    .select2-search--dropdown .select2-search__field { border: 1px solid var(--border-md) !important; border-radius: var(--radius-sm) !important; padding: 7px 10px; font-size: 13px; font-family: var(--font); }
+    .select2-search--dropdown .select2-search__field:focus { outline: none; border-color: var(--blue) !important; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="panel-header">
+    <div class="panel-header-icon"><i class="ti ti-steering-wheel"></i></div>
+    <div>
+      <h1>Driver bid panel</h1>
+      <p>Submit a bid on behalf of a driver for a booking</p>
+    </div>
+  </div>
+
+  <!-- Booking Details -->
+  <div class="card">
+    <div class="section-label">Booking details</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Booking ID <span class="req">*</span></label>
+        <input type="text" id="booking_id" placeholder="e.g. 26050743IUAY">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bid amount <span class="req">*</span></label>
+        <div class="amount-wrap">
+          <span class="amount-prefix">৳</span>
+          <input type="number" id="amount" placeholder="0">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Driver Select -->
+  <div class="card">
+    <div class="section-label">Select driver</div>
+    <div class="form-group">
+      <label class="form-label">Mobile number <span class="req">*</span></label>
+      <select id="driver_select" style="width:100%">
+        <option></option>
+        <option value="01610855248">01610855248</option>
+        <option value="01712345678">01712345678</option>
+        <option value="01812345678">01812345678</option>
+        <option value="01912345678">01912345678</option>
+        <option value="01511223344">01511223344</option>
+        <option value="01677889900">01677889900</option>
+      </select>
+    </div>
+    <div class="driver-info-card" id="driver_info">
+      <div class="driver-avatar" id="driver_avatar">--</div>
+      <div class="driver-details">
+        <p id="driver_mobile_display">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <button class="submit-btn" id="submit_btn" disabled>
+    <i class="ti ti-send"></i>
+    Submit bid
+  </button>
+
+  <!-- Response -->
+  <div class="response-area" id="response_area">
+    <div class="response-message" id="response_message">
+      <i id="resp_icon"></i>
+      <span id="resp_message_text"></span>
+    </div>
+    <button class="response-toggle" id="resp_toggle">
+      <i class="ti ti-chevron-down"></i>
+      Show full response
+    </button>
+    <div class="response-raw" id="response_raw">
+      <div class="response-body">
+        <pre id="resp_body"></pre>
+        <div class="response-meta" id="resp_meta"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+  // ── Base URL (hidden from UI) ─────────────────────────────────────
+  const BASE_URL = "https://test.garibookadmin.com/api/v4";
+  const API_URL  = BASE_URL + "/driver-add-bid";
+  // ─────────────────────────────────────────────────────────────────
+
+  $(function () {
+
+    $('#driver_select').select2({
+      placeholder: 'Search mobile number...',
+      allowClear: true
+    });
+
+    $('#driver_select').on('select2:select', function (e) {
+      const mobile = e.params.data.id;
+      $('#driver_avatar').text(mobile.slice(0, 3));
+      $('#driver_mobile_display').text(mobile);
+      $('#driver_info').addClass('show');
+      checkForm();
+    });
+
+    $('#driver_select').on('select2:unselect', function () {
+      $('#driver_info').removeClass('show');
+      checkForm();
+    });
+
+    $('#booking_id, #amount').on('input', checkForm);
+
+    function checkForm() {
+      const ok = $('#booking_id').val().trim() &&
+                 $('#amount').val().trim() &&
+                 $('#driver_select').val();
+      $('#submit_btn').prop('disabled', !ok);
+    }
+
+    // Toggle raw response
+    $('#resp_toggle').on('click', function () {
+      const raw = $('#response_raw');
+      const btn = $(this);
+      const isOpen = raw.hasClass('show');
+      raw.toggleClass('show');
+      btn.toggleClass('open');
+      btn.find('span').text(isOpen ? 'Show full response' : 'Hide full response');
+    });
+
+    $('#submit_btn').on('click', async function () {
+      const bId    = $('#booking_id').val().trim();
+      const amt    = $('#amount').val().trim();
+      const mobile = $('#driver_select').val();
+      if (!bId || !amt || !mobile) return;
+
+      const btn = $(this);
+      btn.html('<span class="spinner"></span> Submitting...').prop('disabled', true);
+      $('#response_area').removeClass('show');
+      $('#response_raw').removeClass('show');
+      $('#resp_toggle').removeClass('open').find('span').text('Show full response');
+
+      const formdata = new FormData();
+      formdata.append("booking_id", bId);
+      formdata.append("mobile",     mobile);
+      formdata.append("amount",     amt);
+
+      const t0 = Date.now();
+
+      try {
+        const res     = await fetch(API_URL, { method: "POST", body: formdata });
+        const elapsed = Date.now() - t0;
+        const rawText = await res.text();
+
+        let parsed = null;
+        let display = rawText;
+        try {
+          parsed  = JSON.parse(rawText);
+          display = JSON.stringify(parsed, null, 2);
+        } catch (_) {}
+        if (!display) display = "(empty response)";
+
+        // Determine success: use JSON status field if present, else HTTP status
+        const apiStatus = parsed && (parsed.status || parsed.statusCode);
+        const isSuccess = apiStatus ? (apiStatus >= 200 && apiStatus < 300) : res.ok;
+
+        // Pick message: from JSON message field, or fallback
+        const msg = (parsed && parsed.message) ? parsed.message
+                  : (isSuccess ? 'Request successful' : 'Request failed');
+
+        $('#response_message').attr('class', 'response-message ' + (isSuccess ? 'success' : 'error'));
+        $('#resp_icon').attr('class', isSuccess ? 'ti ti-circle-check' : 'ti ti-circle-x');
+        $('#resp_message_text').text(msg);
+        $('#resp_body').text(display);
+        $('#resp_meta').html(`<span>HTTP ${res.status} ${res.statusText}</span><span>${elapsed} ms</span>`);
+
+      } catch (err) {
+        const elapsed = Date.now() - t0;
+        $('#response_message').attr('class', 'response-message error');
+        $('#resp_icon').attr('class', 'ti ti-alert-triangle');
+        $('#resp_message_text').text('Network error — could not reach server');
+        $('#resp_body').text(err.message);
+        $('#resp_meta').html(`<span>${elapsed} ms</span>`);
+      }
+
+      $('#response_area').addClass('show');
+      btn.html('<i class="ti ti-send"></i> Submit bid');
+      checkForm();
+    });
+
+  });
+</script>
+</body>
+</html>
